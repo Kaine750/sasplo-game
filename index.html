@@ -1,0 +1,567 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>サスプロ Explorers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+:root{
+  --ground:#07090d; --board:#0e1117; --panel:#161b24; --line:#2a3240; --ink:#e9edf3; --mute:#8b96a8;
+  --gold:#e8b923; --gold-d:#8a6a0e; --eng:#e3892f; --sci:#4b8ff0; --stf:#3bb872; --craft:#9aa7ff;
+  --glitter:#0c4a33; --danger:#ff6b6b;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --f-disp:"Dela Gothic One","Zen Kaku Gothic New",system-ui,sans-serif;
+  --f-num:"Chakra Petch","Zen Kaku Gothic New",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--ground);color:var(--ink)}
+body{font-family:var(--f-body);font-size:14px;line-height:1.5;padding-inline:16px;padding-block:12px 40px;
+  background-image:radial-gradient(1px 1px at 20% 30%,#ffffff22 50%,transparent 51%),radial-gradient(1px 1px at 70% 80%,#ffffff1a 50%,transparent 51%),radial-gradient(1.5px 1.5px at 45% 60%,#ffffff14 50%,transparent 51%);
+  background-size:180px 180px,240px 240px,310px 310px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,.card:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column}
+.brand small{font-family:var(--f-num);letter-spacing:.2em;color:var(--gold);font-size:11px}
+.brand h1{font-family:var(--f-disp);font-weight:400;font-size:22px;margin:0;letter-spacing:.04em}
+.btn{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 14px;font-weight:700}
+.btn:hover{border-color:var(--gold)}
+.btn.primary{background:var(--gold);color:#1a1405;border-color:var(--gold)}
+.btn.primary:disabled,.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent}
+.stats{display:flex;gap:16px;font-family:var(--f-num);color:var(--mute);font-size:13px;flex-wrap:wrap}
+.stats b{color:var(--ink);font-size:16px}
+
+/* setup */
+.setup{background:var(--board);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:18px}
+.setup h2{font-family:var(--f-disp);font-weight:400;margin:0;font-size:20px}
+.setup .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.setup label{color:var(--mute);font-size:13px}
+.setup select,.setup input{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font:inherit}
+.pl-row{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;max-width:420px}
+.lede{color:var(--mute);max-width:62ch;margin:0}
+
+/* game layout */
+.game{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:14px}
+@media (max-width:900px){.game{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--board);border:1px solid var(--line);border-radius:10px;padding:12px}
+.panel h3{margin:0 0 8px;font-size:12px;letter-spacing:.14em;color:var(--mute);font-family:var(--f-num);font-weight:700;text-transform:uppercase}
+.phasebar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:linear-gradient(90deg,#1c1606,#0e1117);border:1px solid var(--gold-d);border-radius:10px;padding:10px 14px}
+.phasebar .who{font-family:var(--f-disp);font-size:18px}
+.phasebar .hint{color:var(--mute);font-size:13px}
+.steps{display:flex;gap:6px;font-family:var(--f-num);font-size:12px}
+.steps span{padding:3px 8px;border-radius:99px;border:1px solid var(--line);color:var(--mute)}
+.steps span.on{background:var(--gold);color:#1a1405;border-color:var(--gold)}
+
+/* pool */
+.pool{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+
+/* play sheet */
+.sheet{background:#000;border-radius:10px;padding:12px;border:1px solid #222;display:grid;gap:12px}
+.sheet .lbl{background:#d9d9d9;color:#111;font-weight:700;font-size:12px;padding:1px 10px;justify-self:center;border-radius:2px}
+.slots,.cols{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.slot{border:1px solid #333;border-radius:6px;min-height:150px;position:relative;display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#0b0b0b}
+.slot.ok{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.slot.pick{cursor:pointer;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 3px var(--gold) inset}}
+@media (prefers-reduced-motion:reduce){.slot.pick{animation:none}}
+.pts{position:absolute;top:4px;left:4px;background:#e8e8e8;color:#000;font-family:var(--f-num);font-weight:700;font-size:12px;width:20px;height:20px;display:grid;place-items:center;border-radius:2px;z-index:2}
+.cond{display:flex;gap:6px;justify-content:center;font-family:var(--f-num);font-weight:700;font-size:12px;flex-wrap:wrap}
+.cond span{display:inline-flex;align-items:center;gap:2px}
+.cond .met{opacity:1}.cond .unmet{opacity:.45}
+.i-e{color:var(--eng)}.i-s{color:var(--sci)}.i-t{color:var(--stf)}
+.col{border:1px solid #333;border-radius:6px;min-height:170px;background:#0b0b0b;padding:4px;position:relative;display:flex;flex-direction:column}
+.col .head{text-align:center;font-size:11px;color:#bbb;padding:22px 0 4px;line-height:1.2}
+.col .head b{display:block;font-family:var(--f-num);font-size:13px}
+.col .cost{position:absolute;left:4px;top:26px;display:flex;flex-direction:column;gap:2px}
+.col .cost i{width:9px;height:9px;background:#e4a077;border-radius:1px;display:block}
+.stack{display:flex;flex-direction:column;margin-top:4px}
+.stack .card{margin-top:-78px}
+.stack .card:first-child{margin-top:0}
+.bonusline{text-align:center;font-family:var(--f-num);color:#ccc;font-size:13px;border-top:1px solid #333;padding-top:4px}
+.bonusline.on{color:var(--gold)}
+@media (max-width:620px){.slots,.cols{gap:4px}.sheet{padding:6px}.col .head{font-size:9px}}
+
+/* cards */
+.card{width:100%;max-width:130px;aspect-ratio:746/1090;border-radius:6px;position:relative;overflow:hidden;
+  background:radial-gradient(circle at 30% 20%,#1d7a52 0,transparent 40%),radial-gradient(circle at 80% 70%,#136343 0,transparent 45%),var(--glitter);
+  border:3px solid var(--glitter);display:flex;flex-direction:column;font-size:10px;user-select:none;text-align:left;padding:0;color:var(--ink);margin-inline:auto}
+.card .inner{flex:1;margin:12px 3px 3px;border-radius:3px;background:linear-gradient(180deg,#2b3446 0,#1a2130 55%,#3a3322 100%);position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:3px}
+.card.S .inner{background:linear-gradient(180deg,#26405f 0,#172436 55%,#223454 100%)}
+.card.T .inner{background:linear-gradient(180deg,#244a39 0,#152a21 55%,#1f3d2f 100%)}
+.card .topt{position:absolute;top:0;left:0;right:0;text-align:center;font-family:var(--f-num);font-size:6px;letter-spacing:.12em;color:#fff;line-height:12px}
+.card .attr{position:absolute;top:2px;left:50%;transform:translateX(-50%);background:var(--gold);color:#241a00;font-family:var(--f-num);font-weight:700;font-size:8px;padding:0 6px;border-radius:2px;white-space:nowrap}
+.card.S .attr{background:#6fa6ff;color:#051a3a}
+.card.T .attr{background:#58d18f;color:#062a16}
+.card .bt,.card .logos,.card .attr,.card .ptv{z-index:2}
+.card .bt{position:absolute;top:14px;right:3px;width:22px;height:22px}
+.card .logos{position:absolute;top:14px;left:3px;display:flex;flex-direction:column;gap:2px}
+.lg{font-family:var(--f-num);font-weight:700;font-size:7px;padding:1px 3px;border-radius:6px;color:#fff;line-height:1.2;white-space:nowrap;border:1px solid #ffffff55}
+.lg.STU{background:#6b6b6b}
+.lg.HAYABUSA2{background:#6d3fb6}.lg.MMX{background:#c2512c}.lg.MMO{background:#1f7fa8}.lg.DESTINY{background:#2d4fb0}
+.lg.SOLARC{background:#b8801a}.lg.XRISM{background:#1a8f7a}.lg.ERG{background:#8f2a55}.lg.HINODE{background:#b13a3a}
+.lg.hit{outline:2px solid var(--gold)}
+.card .dept{font-size:7px;background:var(--gold);color:#241a00;padding:0 3px;border-radius:2px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.card.S .dept{background:#6fa6ff;color:#051a3a}.card.T .dept{background:#58d18f;color:#062a16}
+.card .nm{font-family:var(--f-disp);font-size:13px;line-height:1.15;margin-top:2px;text-shadow:0 1px 2px #000}
+.card .no{font-family:var(--f-num);font-size:6px;color:#cfd;opacity:.8}
+.card .ptv{position:absolute;bottom:3px;right:4px;font-family:var(--f-num);font-weight:700;font-size:10px;color:var(--gold)}
+.card.craft{background:linear-gradient(160deg,#0c1024,#030410);border-color:#1b1f3a}
+.card.craft .inner{background:radial-gradient(circle at 60% 35%,#2b3470 0,#0a0d22 60%);}
+.card.craft .nm{font-size:12px}
+.card.craft .dept{background:var(--gold)}
+.card.back{background:#fff;border-color:#fff;display:grid;place-content:center;gap:4px;text-align:center;color:#111}
+.card.back .bk1{font-family:var(--f-num);font-weight:700;font-style:italic;font-size:9px;letter-spacing:.08em;color:#5a3d8f}.card.back .bk1 i{color:#1d3f9a}
+.card.back .bk2{font-family:var(--f-num);font-weight:700;font-size:10px;line-height:1.1;letter-spacing:.06em}
+.big .card.back .bk1{font-size:14px}.big .card.back .bk2{font-size:16px}
+.piles{display:flex;gap:10px;align-items:flex-end}.piles .pile{width:64px;display:grid;gap:2px;text-align:center;font-family:var(--f-num);font-size:11px;color:var(--mute)}
+.piles .pile .card{box-shadow:2px 2px 0 #cfcfcf,4px 4px 0 #9a9a9a}.piles .pile .card .bk1{font-size:6px}.piles .pile .card .bk2{font-size:7px}
+.poolrow{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}.poolrow .pool{flex:1;min-width:0}
+.card.sel{outline:3px solid var(--gold);outline-offset:1px}
+.card.pay{outline:3px solid var(--danger);outline-offset:1px;filter:brightness(.7)}
+.card.dim{opacity:.4}
+button.card{cursor:pointer}
+button.card:hover{transform:translateY(-3px)}
+.card{transition:transform .12s}
+
+.card.photo{background:#0c4a33;border:0;padding:0;border-radius:5px;box-shadow:0 0 0 1px #ffffff22}
+.card.photo img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.card.photo.hitc{box-shadow:0 0 0 2px var(--gold)}
+.big .card.photo{width:260px;max-width:100%}
+/* all sheets */
+.sheets{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px}
+.sheetwrap{display:grid;gap:6px}
+.sheetwrap .sh{display:flex;justify-content:space-between;align-items:baseline;font-weight:700}
+.sheetwrap .sh span{font-family:var(--f-num);color:var(--gold)}
+.sheetwrap.cur .sheet{border-color:var(--gold)}
+.sheet.compact{padding:6px;gap:6px}
+.sheet.compact .slots,.sheet.compact .cols{gap:4px}
+.sheet.compact .slot{min-height:96px}
+.sheet.compact .col{min-height:110px}
+.sheet.compact .col .head{font-size:8px;padding-top:20px}
+.sheet.compact .stack .card{margin-top:-52px}
+.sheet.compact .stack .card:first-child{margin-top:0}
+.sheet.compact .cond{font-size:10px;gap:3px}
+.sheet.compact .lbl{font-size:10px}
+/* hand */
+.hand{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.hand .cw{display:flex;flex-direction:column;gap:3px;align-items:center}
+.hand .costtag{font-family:var(--f-num);font-size:11px;color:var(--mute)}
+.hand .costtag b{color:var(--gold)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.note{color:var(--mute);font-size:12px}
+
+/* side */
+.opp{display:grid;gap:8px}
+.oppc{border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--panel)}
+.oppc.cur{border-color:var(--gold)}
+.oppc .nm{font-weight:700;display:flex;justify-content:space-between}
+.oppc .nm span{font-family:var(--f-num);color:var(--gold)}
+.mini{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;font-family:var(--f-num);font-size:11px;text-align:center;margin-top:4px}
+.mini div{background:#0b0e14;border-radius:4px;padding:2px 0}
+.mini small{display:block;color:var(--mute);font-size:9px}
+.oppc .crafts{font-size:11px;color:var(--mute);margin-top:4px}
+.log{max-height:260px;overflow:auto;font-size:12px;color:var(--mute);display:flex;flex-direction:column;gap:3px}
+.log div b{color:var(--ink)}
+
+/* modal */
+.modal{position:fixed;inset:0;background:#000b;display:grid;place-items:center;padding:16px;z-index:50}
+.modal .box{background:var(--board);border:1px solid var(--gold-d);border-radius:12px;padding:18px;max-width:560px;width:100%;max-height:90vh;overflow:auto;display:grid;gap:12px}
+.modal h2{font-family:var(--f-disp);font-weight:400;margin:0;font-size:20px}
+.big{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.big .card{max-width:190px;width:190px;font-size:14px}
+.big .card .nm{font-size:20px}.big .card .dept{font-size:10px}.big .card .attr{font-size:11px}.big .card .lg{font-size:10px}.big .card .bt{width:34px;height:34px}.big .card .topt{font-size:8px}.big .card .ptv{font-size:14px}.big .card .no{font-size:9px}
+.tags{display:flex;flex-wrap:wrap;gap:4px;max-width:320px}
+.tags span{background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:1px 8px;font-size:12px}
+table.score{width:100%;border-collapse:collapse;font-family:var(--f-num);font-size:13px}
+table.score th,table.score td{padding:6px;border-bottom:1px solid var(--line);text-align:right}
+table.score th:first-child,table.score td:first-child{text-align:left;font-family:var(--f-body)}
+table.score tr.win td{color:var(--gold);font-weight:700}
+.rules{font-size:13px;color:var(--mute);display:grid;gap:6px}
+.rules b{color:var(--ink)}
+.breakdown{font-family:var(--f-num);font-size:13px;display:grid;gap:2px}
+</style>
+
+</head><body><div class="wrap" id="app"></div>
+
+<script>
+const CARDS = [{"id":1,"no":"0001","a":"E","st":1,"z":6,"n":"天川 海音","d":"宇宙飛翔工学研究系","t":["#兵庫","#光学航法","#宮っ子","#ASSL","#HELIOS-R","#JOJO","#温泉","#テニス"],"b":"O","l":[]},{"id":2,"no":"0940","a":"E","st":1,"z":0,"n":"久島 明洋","d":"宇宙飛翔工学研究系","t":["#山梨","#測角航法","#ワンゲル","#ASSL","#信長の野望","#知識","#ビールより梅酒"],"b":"O","l":[]},{"id":3,"no":"0002","a":"S","st":1,"z":6,"n":"新井 雄大","d":"太陽系科学研究系","t":["#神奈川","#かぐや","#LUPEX TRITON","#天体観測","#サッカー","#ドライブ"],"b":"A","l":[]},{"id":4,"no":"0003","a":"S","st":0,"z":10,"n":"大工原 一貴","d":"宇宙物理学研究系","t":["#長野","#Roman宇宙望遠鏡","#すばる望遠鏡","#銀河・銀河団","#バレーボール"],"b":"O","l":[]},{"id":5,"no":"0004","a":"S","st":0,"z":2,"n":"榎木谷 海","d":"太陽系科学研究系","t":["#大阪","#LAPYUTA","#GREX-PLUS","#SCCOT","#アウトリーチ","#バンド"],"b":"A","l":[]},{"id":6,"no":"0005","a":"S","st":0,"z":5,"n":"塩谷 圭吾","d":"太陽系科学研究系","t":["#日本","#木星氷衛星探査機JUICE","#ガニメデレーザ高度計GALA","#HWO"],"b":"O","l":[]},{"id":7,"no":"0006","a":"S","st":0,"z":8,"n":"藤本 正樹","d":"所長","t":["#大阪","#牡蠣","#中学時代のNY生活","#幼稚園時代のロンドン生活","#サッカー部"],"b":"B","l":["MMX","MMO","DESTINY","XRISM","HAYABUSA2"]},{"id":8,"no":"0007","a":"E","st":0,"z":7,"n":"藤原 正寛","d":"研究開発部門","t":["#兵庫","#はやぶさ","#はやぶさ２","#EQUULEUS","#コーヒー","#お酒","#パン"],"b":"A","l":["DESTINY","HAYABUSA2","SOLARC"]},{"id":9,"no":"0008","a":"T","st":0,"z":10,"n":"深山 直子","d":"科学推進部","t":["#静岡＆神奈川","#学生担当","#総研大","#音楽","#猫","#自然","#コミュニケーション"],"b":"A","l":[]},{"id":10,"no":"0009","a":"E","st":1,"z":10,"n":"福王 悠星","d":"宇宙機応用工学研究系","t":["#京都","#自身の名前(両親)","#はやぶさ帰還","#LignoSat","#ハンドボール","#登山"],"b":"O","l":[]},{"id":11,"no":"0010","a":"E","st":1,"z":6,"n":"福島 優太","d":"太陽系科学研究系","t":["#神奈川","#野球","#月","#SELENE","#UZUME","#心が夢中になる方へ"],"b":"AB","l":[]},{"id":12,"no":"0011","a":"E","st":1,"z":3,"n":"濱崎 拓","d":"宇宙機応用工学研究系","t":["#兵庫","#圧倒的電気系","#はんだ付け任せろ","#ドローン制御","#ロボコン","#ISASバンド"],"b":"A","l":[]},{"id":13,"no":"0012","a":"T","st":0,"z":6,"n":"長谷部 尚子","d":"科学推進部","t":["#ドイツ","#ISAS予算管理","#マラソン","#硬式テニス","#ハンガリー","#岐阜","#書道"],"b":"A","l":[]},{"id":14,"no":"0013","a":"E","st":1,"z":4,"n":"平野 敬大","d":"宇宙飛翔工学研究系","t":["#北海道","#想像力は未来だ！","#初期軌道解析","#旅程大臣","#速聴","#微糖のコーヒー"],"b":"O","l":[]},{"id":15,"no":"0014","a":"E","st":0,"z":5,"n":"今村 裕志","d":"DESTINY+プロジェクト","t":["#京都","#太陽","#サッカー","#戸隠","#キャンプ","#10年日記","#ライデン"],"b":"B","l":["DESTINY"]},{"id":16,"no":"0015","a":"E","st":1,"z":2,"n":"石戸 大智","d":"学際科学研究系","t":["#神奈川","#ヨット","#サックス","#制御工学","#HELIOS-R","#はやぶさ世代","#総研大"],"b":"A","l":[]},{"id":17,"no":"0016","a":"E","st":0,"z":0,"n":"伊藤 琢博","d":"宇宙飛翔工学研究系","t":["#三重","#サターンV","#CanSat","#SLIM","#はやぶさ帰還","#ネバーギブアップモード"],"b":"B","l":[]},{"id":18,"no":"0017","a":"E","st":0,"z":7,"n":"岩城 拓弥","d":"研究開発部門 第一研究ユニット","t":["#神奈川","#制御理論","#スウェーデン","#テニス","#子育て","#はやぶさ2","#FF"],"b":"B","l":["HAYABUSA2"]},{"id":19,"no":"0018","a":"S","st":0,"z":4,"n":"岩田 隆浩","d":"太陽系科学研究系","t":["#岐阜","#オリオン座","#短波ラジオ","#Voyager","#VLBI","#月面天文台"],"b":"A","l":["MMX","HAYABUSA2"]},{"id":20,"no":"0019","a":"S","st":0,"z":7,"n":"梶谷 伊織","d":"火星衛星探査機プロジェクトチーム","t":["#京都","#MMX","#BepiColombo","#火星","#登山","#乗り鉄","#読書"],"b":"A","l":["MMX","MMO"]},{"id":21,"no":"0019","a":"S","st":0,"z":7,"n":"梶谷 伊織","d":"BepiColomboプロジェクトチーム","t":["#京都","#MMX","#BepiColombo","#火星","#登山","#乗り鉄","#読書"],"b":"A","l":["MMO","MMX"]},{"id":22,"no":"0020","a":"E","st":0,"z":10,"n":"加藤 秀樹","d":"SOLAR-C","t":["#東京","#ロケット","#ソーラー電力セイル","#燃焼","#マラソンと水泳と筋トレ"],"b":"B","l":["SOLARC"]},{"id":23,"no":"0021","a":"E","st":0,"z":6,"n":"川﨑 盛矢","d":"地球外物質研究グループ","t":["#東京","#水泳","#旅行","#キュレーション","#サンプルリターン","#なんとかなる"],"b":"A","l":["HAYABUSA2","MMX"]},{"id":24,"no":"0022","a":"E","st":0,"z":0,"n":"木村 洸貴","d":"研究開発部門","t":["#大阪","#スピン","#太陽光圧","#磁気トルカ","#ドライブ","#スイス","#バスケットボール"],"b":"B","l":["HAYABUSA2","MMX"]},{"id":25,"no":"0023","a":"E","st":1,"z":2,"n":"小林 伶士","d":"学際科学研究系","t":["#神奈川","#太陽光圧","#サッカー","#洋楽","#マラソン","#銀河鉄道999","#ASSL"],"b":"O","l":[]},{"id":26,"no":"0024","a":"S","st":1,"z":11,"n":"工藤 雅也","d":"太陽系科学研究系","t":["#福岡","#LAPYUTA","#BepiColombo","#水星","#氷衛星","#アウトリーチ","#将棋"],"b":"O","l":[]},{"id":27,"no":"0025","a":"E","st":0,"z":10,"n":"楠本 哲也","d":"宇宙飛翔工学研究系","t":["#北海道","#はやぶさ2","#姿勢制御","#GNC","#バイオリン","#ファンタジー"],"b":"A","l":["HAYABUSA2"]},{"id":28,"no":"0026","a":"S","st":0,"z":7,"n":"マツダ フレドリック","d":"宇宙物理研究系","t":["#アメリカ","#宇宙の始まり","#光学","#漫画","#体操","#カルフォルニア","#ブレイクダンス"],"b":"A","l":[]},{"id":29,"no":"0027","a":"E","st":0,"z":6,"n":"松宮 久","d":"宇宙飛翔工学研究系","t":["#大阪","#金属材料","#眼鏡","#オーケストラ","#バストロンボーン","#旅"],"b":"A","l":[]},{"id":30,"no":"0028","a":"E","st":0,"z":2,"n":"三桝 裕也","d":"宇宙科学プログラムディレクタ付","t":["#宮崎","#サッカー","#宇宙研","#はやぶさ２","#IKAROS","#小惑星探査","#トリフネ"],"b":"A","l":["HAYABUSA2"]},{"id":31,"no":"0029","a":"E","st":0,"z":3,"n":"宮地 晃平","d":"先端工作技術グループ","t":["#埼玉","#アマチュア無線","#ものづくり","#科学技術が題材の漫画","#クリーンルーム"],"b":"B","l":[]},{"id":32,"no":"0030","a":"E","st":0,"z":5,"n":"森 治","d":"学際科学研究系","t":["#愛知","#エビ・カニ","#ソーラーセイル","#いつでもどこでも寝られる","#IKAROS"],"b":"B","l":["HAYABUSA2"]},{"id":33,"no":"0031","a":"S","st":0,"z":9,"n":"村上 豪","d":"太陽系科学研究系","t":["#神奈川","#紫外線","#YouTube","#ベース","#村上水軍","#人たらし"],"b":"B","l":["MMO"]},{"id":34,"no":"0032","a":"E","st":1,"z":8,"n":"長坂 奏汰","d":"太陽系科学研究系","t":["#神奈川","#サッカー","#鹿島","#JUICE","#はやぶさ2","#最高の景色を"],"b":"O","l":[]},{"id":35,"no":"0033","a":"E","st":1,"z":1,"n":"長澤 致","d":"宇宙飛翔工学研究系","t":["#東京","#折り紙","#火星","#みすっちゃん","#地球","#家族","#友達","#ミュージカル"],"b":"O","l":[]},{"id":36,"no":"0034","a":"T","st":0,"z":8,"n":"中谷 直樹","d":"調達部","t":["#山口","#工学修士","#経営学修士","#月","#中小企業診断士","#第三種電気主任技術者"],"b":"O","l":[]},{"id":37,"no":"0035","a":"T","st":0,"z":3,"n":"中澤 暁","d":"BepiColomboプロジェクトチーム","t":["#茨城","#中古の天体望遠鏡","#自由研究","#地学部","#サッカー（応援）","#家族"],"b":"A","l":["HAYABUSA2","MMO"]},{"id":38,"no":"0036","a":"T","st":0,"z":9,"n":"那須 祐介","d":"科学推進部","t":["#熊本","#科学技術コミュニケーター","#パイロット","#曲技飛行","#ミュージカル"],"b":"A","l":[]},{"id":39,"no":"0037","a":"E","st":1,"z":9,"n":"新見 柊聖","d":"宇宙飛翔工学研究系","t":["#愛媛","#だいたいの事は結局なんとかなる","#Ti-6Al-4V","#旅行命","#ハンドボール"],"b":"A","l":[]},{"id":40,"no":"0038","a":"S","st":1,"z":4,"n":"西岡 政寛","d":"太陽系科学研究系","t":["#高知","#VERTECS","#IRIS","#M78星雲","#太陽","#フレア","#大学ロケット"],"b":"O","l":[]},{"id":41,"no":"0039","a":"E","st":0,"z":10,"n":"小田切 公秀","d":"宇宙飛翔工学研究系","t":["#秋田","#剣道","#LiteBIRD","#2001年しし座流星群","#熱制御"],"b":"A","l":[]},{"id":42,"no":"0040","a":"E","st":1,"z":5,"n":"大藤 勇亮","d":"学際科学研究系","t":["#大阪","#バスケットボール","#歌を歌う","#洋画鑑賞","#F1","#海外・国内旅行"],"b":"AB","l":[]},{"id":43,"no":"0041","a":"E","st":0,"z":8,"n":"小川 博之","d":"BepiColomboプロジェクトチーム","t":["#三重","#BepiColombo","#合気道","#宇宙機熱制御","#再使用ロケット"],"b":"A","l":["MMO"]},{"id":44,"no":"0042","a":"S","st":0,"z":9,"n":"小栗 秀悟","d":"宇宙物理学研究系","t":["#東京","#スキー","#手品","#ゲーム","#LiteBIRD","#プログラミング"],"b":"AB","l":[]},{"id":45,"no":"0043","a":"S","st":0,"z":2,"n":"小嶋 智子","d":"地球外物質研究グループ","t":["#東京","#隕石","#ミニチュアダックス♡","#バイオリンとピアノ","#読書","#韓国語"],"b":"B","l":[]},{"id":46,"no":"0044","a":"E","st":0,"z":11,"n":"岡田 大規","d":"研究開発部門 第二研究ユニット","t":["#東京","#構造力学","#機械学習","#カラオケ","#ニュージーランド","#WBC現地観戦"],"b":"B","l":[]},{"id":47,"no":"0045","a":"E","st":0,"z":3,"n":"大槻 真嗣","d":"宇宙機応用工学研究系","t":["#京都","#レゴリス","#ロボット","#着陸","#モビリティ","#砂時計","#モータ"],"b":"O","l":["MMX"]},{"id":48,"no":"0046","a":"E","st":0,"z":4,"n":"尾崎 直哉","d":"宇宙機応用工学研究系","t":["#兵庫","#ミッションデザイン","#軌道","#PROCYON","#ギター","#薪"],"b":"O","l":["DESTINY"]},{"id":49,"no":"0047","a":"E","st":0,"z":5,"n":"佐伯 孝尚","d":"学際科学研究系","t":["#広島","#はやぶさ・はやぶさ２","#IKAROS","#太陽系探査","#川口先生","#家族・学生結婚"],"b":"A","l":["HAYABUSA2"]},{"id":50,"no":"0048","a":"S","st":0,"z":8,"n":"坂本 佳奈子","d":"地球外物質研究グループ","t":["#福岡","#一体感","#はやぶさ２","#家族","#サンプラ","#情熱","#楽しむ","#想い"],"b":"B","l":["HAYABUSA2","MMX"]},{"id":51,"no":"0049","a":"S","st":1,"z":0,"n":"佐藤 澪央","d":"太陽系科学研究系","t":["#東京","#コンドリュール","#プラネタリウム","#簡単にいかないから生きてゆける"],"b":"A","l":[]},{"id":52,"no":"0050","a":"S","st":0,"z":8,"n":"佐藤 毅彦","d":"太陽系科学研究系","t":["#東京","#クラシック音楽","#ものづくり","#アナログ・オーディオ","#図画工作"],"b":"O","l":[]},{"id":53,"no":"0051","a":"E","st":0,"z":2,"n":"澤井 秀次郎","d":"副所長","t":["#東京","#SLIM","#ひさき","#はやぶさ","#挑戦","#スラスタ"],"b":"O","l":[]},{"id":54,"no":"0052","a":"E","st":1,"z":6,"n":"澤井 響","d":"宇宙飛翔工学研究系","t":["#長野","#F-14トムキャット","#ドラム","#エアターボロケット複合エンジン"],"b":"O","l":[]},{"id":55,"no":"0053","a":"E","st":1,"z":10,"n":"重松 雅明","d":"宇宙飛翔工学研究系","t":["#東京","#軌道","#はやぶさ","#総合格闘技","#ランニング","#キャッチャー","#ASSL"],"b":"A","l":[]},{"id":56,"no":"0054","a":"S","st":0,"z":1,"n":"嶌生 有理","d":"宇宙科学プログラム室","t":["#愛媛","#一期一会","#ボーイスカウト","#RAMSES","#プラネタリーディフェンス"],"b":"A","l":["HAYABUSA2"]},{"id":57,"no":"0055","a":"S","st":0,"z":9,"n":"清水 敏文","d":"太陽系科学研究系","t":["#長野","#SOLAR-C","#地学会","#シリウス","#日之出空師","#研究は格闘技"],"b":"A","l":["SOLARC"]},{"id":58,"no":"0056","a":"S","st":1,"z":3,"n":"篠原 直生","d":"太陽系科学研究系","t":["#奈良","#陸上部","#800m","#奈良の鹿","#猫派","#月","#13日の金曜日生","#神戸大"],"b":"O","l":[]},{"id":59,"no":"0057","a":"S","st":0,"z":8,"n":"菅原 春菜","d":"太陽系科学研究系","t":["#福島","#アストロケミストリー","#彗星","#登山","#生命の起源","#エンケラドゥス"],"b":"O","l":["MMX"]},{"id":60,"no":"0058","a":"E","st":1,"z":3,"n":"菅原 一眞","d":"太陽系科学研究系","t":["#埼玉","#建築","#若田宇宙飛行士","#天体観測","#スペースコロニー","#はやぶさ"],"b":"A","l":[]},{"id":61,"no":"0059","a":"T","st":0,"z":5,"n":"杉浦 梓美","d":"科学推進部","t":["#福井","#ピアノ","#水彩画","#温泉","#バスケ","#美術部","#人生万事塞翁が馬","#果物"],"b":"A","l":[]},{"id":62,"no":"0060","a":"S","st":0,"z":5,"n":"鈴木 雄大","d":"太陽系科学研究系","t":["#東京","#水星","#彗星","#すいせい","#サイエンスコミュニケーション","#バスケ"],"b":"AB","l":["MMO"]},{"id":63,"no":"0061","a":"S","st":1,"z":10,"n":"髙井 陸","d":"学際科学研究系","t":["#横浜","#惑星保護","#アストロバイオロジー","#火星生命","#殺菌","#津軽三味線","#サッカー"],"b":"B","l":[]},{"id":64,"no":"0062","a":"S","st":1,"z":7,"n":"高間 大輝","d":"太陽系科学研究系","t":["#神奈川","#君が作る宇宙ミッション","#父がくれた望遠鏡","#STARWARS"],"b":"A","l":[]},{"id":65,"no":"0063","a":"E","st":0,"z":2,"n":"高島 健","d":"宇宙機応用工学研究系","t":["#神奈川","#ボイジャー","#人とのつながり","#田舎（能登）でみた星空","#MacⅡci"],"b":"A","l":["MMO","DESTINY","ERG"]},{"id":66,"no":"0064","a":"E","st":1,"z":0,"n":"髙田 真緒","d":"学際科学研究系","t":["#兵庫","#はやぶさ2","#サンプルリターン","#赤外線背景放射","#深海魚","#宇宙兄弟"],"b":"B","l":[]},{"id":67,"no":"0065","a":"E","st":0,"z":6,"n":"武井 悠人","d":"研究開発部門 第一研究ユニット","t":["#山形","#OTV","#宇宙研","#NASA/JPL","#パサデナ","#柔道","#精力善用・自他共栄"],"b":"O","l":["MMO","HAYABUSA2"]},{"id":68,"no":"0066","a":"E","st":0,"z":3,"n":"田中 孝治","d":"宇宙機応用工学研究系","t":["#新潟","#太陽光発電衛星","#テニス","#池波正太郎","#野球観戦","#いろは一二三"],"b":"O","l":[]},{"id":69,"no":"0067","a":"E","st":0,"z":5,"n":"田中 寛人","d":"研究開発部門 第二研究ユニット","t":["#奈良","#STARWARS","#火星飛行機","#登山","#アーチェリー","#熱屋さん"],"b":"A","l":["SOLARC","MMO"]},{"id":70,"no":"0068","a":"E","st":0,"z":2,"n":"丹野 茉莉枝","d":"BepiColomboプロジェクトチーム","t":["#オーストラリア","#空気力学","#衛星運用","#極超音速流体","#ピアノ","#甘いもの"],"b":"O","l":["MMO","HAYABUSA2"]},{"id":71,"no":"0069","a":"S","st":0,"z":5,"n":"鳥海 森","d":"太陽系科学研究系","t":["#東京","#コンタクトレンズ","#ジャスミン茶","#フレア","#ビリヤニ","#ルービックキューブ"],"b":"O","l":["SOLARC"]},{"id":72,"no":"0070","a":"E","st":0,"z":3,"n":"津田 雄一","d":"副所長","t":["#広島生まれ相模原育ち","#はやぶさ/M-V5号機","#Cansat世界一号機","#Cubesat世界一号機"],"b":"C","l":[]},{"id":73,"no":"0071","a":"E","st":0,"z":1,"n":"月崎 竜童","d":"宇宙飛翔工学研究系","t":["#静岡","#イオンエンジン","#釣り","#ランニング","#子育て","#プラズマ"],"b":"A","l":["DESTINY","HAYABUSA2"]},{"id":74,"no":"0072","a":"S","st":0,"z":0,"n":"臼井 寛裕","d":"太陽系科学研究系","t":["#福岡","#スペースシャトル","#MMX","#キュレーション","#はやぶさ2","#睡眠"],"b":"A","l":["MMX"]},{"id":75,"no":"0073","a":"S","st":0,"z":6,"n":"渡辺 伸","d":"宇宙物理学研究系","t":["#石川","#XRISM","#地球","#テニス","#ASTRO-H SGD HXI","#実験"],"b":"O","l":["XRISM"]},{"id":76,"no":"0074","a":"T","st":0,"z":7,"n":"渡辺 拓真","d":"(元)科学推進部","t":["#京都","#宇宙政策","#宇宙戦略基金","#政治学・行政学","#ドラム","#音楽編集"],"b":"O","l":["HAYABUSA2","MMX"]},{"id":77,"no":"0075","a":"S","st":0,"z":3,"n":"矢田 達","d":"地球外物質研究グループ","t":["#福岡","#ゲーム","#キュレーション","#犬","#隕石","#合気道","#南極","#ドライブ"],"b":"A","l":["MMX","HAYABUSA2"]},{"id":78,"no":"0076","a":"T","st":0,"z":-1,"n":"矢治 健太郎","d":"火星衛星探査機プロジェクトチーム","t":["#大阪","#天体観測","#ようこう","#ひので","#太陽フレア","#ボイジャー","#松任谷由美"],"b":"A","l":["MMX"]},{"id":79,"no":"0077","a":"S","st":0,"z":6,"n":"山口 弘悦","d":"宇宙物理学研究系","t":["#大阪","#XRISM","#ブラックホール","#プラズマ実験","#家族と研究室の仲間"],"b":"A","l":["XRISM"]},{"id":80,"no":"0078","a":"E","st":0,"z":2,"n":"山本 高行","d":"DESTINY⁺プロジェクトチーム","t":["#三重","#DESTINY⁺","#IKAROS","#RVT","#我以外皆我師也"],"b":"O","l":["DESTINY"]},{"id":81,"no":"0079","a":"S","st":0,"z":11,"n":"山根 史弥","d":"大気球実験グループ","t":["#神戸","#μ-PIC","#CERN","#マイクロ波","#テニス","#はんだ付け","#HEAVY METAL"],"b":"B","l":[]},{"id":82,"no":"0080","a":"S","st":0,"z":4,"n":"山崎 大輝","d":"太陽系科学研究系","t":["#大阪","#太陽コロナ","#満月の夜","#ケバブ","#台湾まぜそば","#ウイスキー"],"b":"B","l":["SOLARC"]},{"id":83,"no":"0081","a":"E","st":0,"z":11,"n":"山下 美和子","d":"BepiColomboプロジェクトチーム","t":["#東京","#地上系","#2.5次元舞台","#フェレット","#ダンス","#アラレ"],"b":"A","l":["MMO"]},{"id":84,"no":"0082","a":"S","st":0,"z":3,"n":"山崎 丘","d":"学際科学研究系","t":["#埼玉","#宇宙微生物学","#惑星保護","#空手","#ギター","#DIY","#望遠鏡"],"b":"A","l":[]},{"id":85,"no":"0083","a":"S","st":0,"z":7,"n":"山﨑 敦","d":"太陽系科学研究系","t":["#静岡","#チョコとグミ","#Carpe diem.","#好きな色＝紫外線","#趣味は睡眠"],"b":"A","l":[]},{"id":86,"no":"0084","a":"S","st":0,"z":4,"n":"矢野 創","d":"学際科学研究系","t":["#東京","#宇宙塵","#サンプルリターン","#たんぽぽ","#イカロス","#OPENS-0"],"b":"B","l":["HAYABUSA2","DESTINY","MMO"]},{"id":87,"no":"0085","a":"S","st":0,"z":0,"n":"米山 友景","d":"宇宙物理学研究系","t":["#兵庫","#X線天文学","#中性子星","#ゲーム","#プラモデル","#ビール","#人力飛行機"],"b":"O","l":["XRISM"]},{"id":88,"no":"0086","a":"S","st":0,"z":10,"n":"吉川 真","d":"宇宙機応用工学研究系","t":["#栃木","#小惑星","#文化人類学","#山登り","#プラネタリーディフェンス","#星の王子さま"],"b":"A","l":["HAYABUSA2"]},{"id":89,"no":"0087","a":"E","st":0,"z":1,"n":"吉川 健人","d":"火星衛星探査機プロジェクトチーム","t":["#福井","#はや２TD","#STARWARS","#アウトドア","#美術鑑賞","#LEV-1"],"b":"A","l":["MMX","HAYABUSA2"]},{"id":90,"no":"0088","a":"E","st":0,"z":10,"n":"吉光 徹雄","d":"宇宙機応用工学研究系","t":["#広島","#MINERVA2/はやぶさ2","#モーター同好会","#電気電子工学"],"b":"B","l":["HAYABUSA2"]}];
+const CRAFTS = [
+ {k:"DESTINY",n:"DESTINY⁺",d:"深宇宙探査技術実証機",no:"0089",t:["#高頻度/高速フライバイ探査","#小惑星フェートン/アポフィス","#プラネタリーディフェンス"]},
+ {k:"ERG",n:"あらせ（ERG）",d:"ジオスペース探査衛星",no:"0090",t:["#放射線帯・宇宙嵐の解明","#長楕円軌道スピン衛星","#高分解能の電子分析器を搭載"]},
+ {k:"HAYABUSA2",n:"はやぶさ2",d:"小惑星探査機",no:"0091",t:["#小惑星リュウグウのサンプルリターン","#拡張ミッション はやぶさ2♯(SHARP)","#小惑星トリフネの超近接フライバイ"]},
+ {k:"MMO",n:"みお（MMO）",d:"水星磁気圏探査機",no:"0092",t:["#国際水星探査計画BepiColombo","#水星の磁気圏・宇宙環境の観測","#「みお」つくし（澪標・身を尽くし）"]},
+ {k:"MMX",n:"MMX",d:"火星衛星探査計画",no:"0093",t:["#火星圏サンプルリターンミッション","#火星の月、フォボスへ","#グッドラックMMX"]},
+ {k:"HINODE",n:"ひので（SOLAR-B）",d:"太陽観測衛星",no:"0094",t:["#日本で3番目の太陽観測衛星","#太陽活動の謎に迫る","#宇宙天気の予測の改善・深化を目指す"]},
+ {k:"SOLARC",n:"SOLAR-C",d:"高感度太陽紫外線分光観測衛星",no:"0095",t:["#太陽から届く紫外線を分光","#コロナ加熱・太陽フレア","#日米欧の国際ミッション"]},
+ {k:"XRISM",n:"XRISM",d:"X線分光撮像衛星",no:"0096",t:["#日本で7番目のX線天文衛星","#高温プラズマの精密X線分光撮像","#銀河を吹き渡る風をみる"]},
+];
+const LOGO_LABEL={HAYABUSA2:"はやぶさ2",MMX:"MMX",MMO:"みお",DESTINY:"DESTINY⁺",SOLARC:"SOLAR-C",XRISM:"XRISM",ERG:"あらせ",HINODE:"ひので"};
+const ALL_LOGOS=Object.keys(LOGO_LABEL);
+const ZOD="♈♉♊♋♌♍♎♏♐♑♒♓";
+const ZODN=["おひつじ","おうし","ふたご","かに","しし","おとめ","てんびん","さそり","いて","やぎ","みずがめ","うお"];
+const COLS=[
+ {k:"E",label:"Engineer",jp:"研究者（工学）",cost:3,pts:3},
+ {k:"S",label:"Scientist",jp:"研究者（理学）",cost:3,pts:3},
+ {k:"T",label:"Staff",jp:"一般職員",cost:2,pts:2},
+ {k:"ES",label:"Engineer Student",jp:"学生（工学）",cost:1,pts:1},
+ {k:"SS",label:"Scientist Student",jp:"学生（理学）",cost:1,pts:1},
+];
+const COLMAP=Object.fromEntries(COLS.map(c=>[c.k,c]));
+const SLOTS=[{p:5,E:5,S:3,T:1},{p:5,E:3,S:5,T:1},{p:4,E:4,S:2,T:1},{p:3,E:2,S:3,T:1},{p:3,E:3,S:2,T:1}];
+const NO_DIRECTOR="0006", NO_SAWAI="0051";
+
+function colOf(c){ if(c.fd) return "T"; if(c.a==="T") return "T"; if(c.a==="E") return c.st?"ES":"E"; return c.st?"SS":"S"; }
+function logosOf(c){ if(c.fd) return []; return c.no===NO_DIRECTOR? ALL_LOGOS : c.l; }
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ---------- rules engine ---------- */
+function bloodMatch(t, other){ // t: A|B|O|C (new, resolved) ; other: existing blood
+  if(!other) return false;
+  if(t==="C"||other==="C") return true;
+  if(other==="AB") return t==="A"||t==="B";
+  return t===other;
+}
+function costInfo(P, card){
+  const col=colOf(card), base=COLMAP[col].cost, stack=P.cols[col];
+  const opts = card.b==="AB"?["A","B"]:[card.b];
+  let blood=0;
+  for(const t of opts){ const n=stack.filter(x=>!x.fd && bloodMatch(t,x.b)).length; if(n>blood) blood=n; }
+  const top=stack[stack.length-1];
+  const basic = top && !top.fd && !top.st && top.l.length===0 && top.no!==NO_DIRECTOR ? 1:0;
+  return {col,base,blood,basic,cost:Math.max(0,base-blood-basic)};
+}
+function power(P){
+  const w=c=>c.no===NO_SAWAI?3:2;
+  return {
+    E: P.cols.E.reduce((s,c)=>s+w(c),0)+P.cols.ES.length,
+    S: P.cols.S.reduce((s,c)=>s+w(c),0)+P.cols.SS.length,
+    T: P.cols.T.length,
+  };
+}
+function slotOk(P,i){ const s=SLOTS[i],pw=power(P); return !P.slots[i] && pw.E>=s.E && pw.S>=s.S && pw.T>=s.T; }
+function studentCount(P){return P.cols.ES.length+P.cols.SS.length;}
+function canExpand(P){return !P.expandUsed && studentCount(P)>=3 && P.hand.length>0;}
+function allHired(P){return COLS.flatMap(c=>P.cols[c.k]);}
+function score(P){
+  const hired=allHired(P);
+  const exp=COLS.reduce((s,c)=>s+P.cols[c.k].length*c.pts,0);
+  const crafts=P.slots.reduce((s,x,i)=>s+(x?SLOTS[i].p:0),0);
+  let proj=0; const launched=P.slots.filter(Boolean).map(x=>x.k);
+  for(const c of hired){ const L=logosOf(c); proj+=launched.filter(k=>L.includes(k)).length; }
+  const comp=COLS.every(c=>P.cols[c.k].length>0)?3:0;
+  return {exp,crafts,proj,comp,total:exp+crafts+proj+comp};
+}
+
+/* ---------- state ---------- */
+let G=null, UI={sel:null,pay:[],expand:false,craft:null,detail:null,pass:false,showRules:false};
+let SETUP={n:2,players:[{name:"プレイヤー1",cpu:false},{name:"CPU 1",cpu:true},{name:"CPU 2",cpu:true},{name:"CPU 3",cpu:true}],crafts:5};
+try{const s=JSON.parse(localStorage.getItem("suspro-setup")||"null"); if(s&&s.players) SETUP=s;}catch(e){}
+
+function newGame(){
+  const deck=shuffle(CARDS.map(c=>({...c})));
+  const pool=shuffle(CRAFTS.map(c=>({...c}))).slice(0,SETUP.crafts);
+  const players=SETUP.players.slice(0,SETUP.n).map((p,i)=>({name:p.name||("P"+(i+1)),cpu:p.cpu,hand:[],cols:{E:[],S:[],T:[],ES:[],SS:[]},slots:[null,null,null,null,null],expandUsed:false,turns:0}));
+  G={deck,discard:[],pool,players,cur:0,round:1,phase:"hire",hires:0,launched:false,log:[],over:false,lastRound:false};
+  for(const P of players) for(let i=0;i<8;i++) draw(P);
+  try{localStorage.setItem("suspro-setup",JSON.stringify(SETUP));}catch(e){}
+  startTurn();
+}
+function draw(P){
+  if(!G.deck.length){ if(!G.discard.length) return null; G.deck=shuffle(G.discard); G.discard=[]; log("捨て札をシャッフルして山札に補充"); }
+  const c=G.deck.pop(); P.hand.push(c); return c;
+}
+function log(m){G.log.unshift(m); if(G.log.length>80) G.log.pop();}
+function curP(){return G.players[G.cur];}
+function startTurn(){
+  const P=curP(); let n=0; for(let i=0;i<2;i++) if(draw(P)) n++;
+  G.phase="hire"; G.hires=0; G.launched=false;
+  UI={...UI,sel:null,pay:[],expand:false,craft:null};
+  log(`<b>${esc(P.name)}</b> のターン（${n}枚ドロー）`);
+  const humans=G.players.filter(p=>!p.cpu).length;
+  UI.pass = !P.cpu && humans>1;
+  render();
+  if(P.cpu) setTimeout(cpuTurn, 700);
+}
+function hire(P, card, payIds){
+  const ci=costInfo(P,card);
+  P.hand=P.hand.filter(c=>c!==card);
+  const paid=P.hand.filter(c=>payIds.includes(c.id));
+  P.hand=P.hand.filter(c=>!payIds.includes(c.id));
+  G.discard.push(...paid);
+  P.cols[ci.col].push(card); G.hires++;
+  log(`${esc(P.name)} が <b>${esc(card.n)}</b> を雇用（${COLMAP[ci.col].jp}・コスト${ci.cost}）`);
+}
+function expand(P, card){
+  P.hand=P.hand.filter(c=>c!==card);
+  P.cols.T.push({...card,fd:true}); P.expandUsed=true; G.hires++;
+  log(`${esc(P.name)} が研究室を拡大（手札1枚を一般職員として雇用）`);
+}
+function launch(P, craft, slot){
+  P.slots[slot]=craft; G.pool=G.pool.filter(c=>c!==craft); G.launched=true;
+  log(`🚀 ${esc(P.name)} が <b>${esc(craft.n)}</b> を打ち上げ（${SLOTS[slot].p}点枠）`.replace("🚀 ",""));
+}
+function endTurn(){
+  const P=curP(); P.turns++;
+  if(G.pool.length===0 || G.round>=40) G.lastRound=true;
+  const last=G.cur===G.players.length-1;
+  if(G.lastRound && last){ G.over=true; log("ゲーム終了"); render(); return; }
+  G.cur=(G.cur+1)%G.players.length; if(G.cur===0) G.round++;
+  startTurn();
+}
+
+/* ---------- CPU ---------- */
+function cardValue(P,c){
+  const ci=costInfo(P,c), col=COLMAP[ci.col], pw=power(P);
+  let v=col.pts - ci.cost*0.9;
+  const open=SLOTS.filter((s,i)=>!P.slots[i]);
+  const need={E:0,S:0,T:0}; for(const s of open){need.E=Math.max(need.E,s.E-pw.E);need.S=Math.max(need.S,s.S-pw.S);need.T=Math.max(need.T,s.T-pw.T);}
+  const kind=ci.col==="T"?"T":ci.col.startsWith("E")?"E":"S";
+  if(need[kind]>0) v+=2.2;
+  if(P.cols[ci.col].length===0) v+=1.2;
+  const targets=[...G.pool.map(x=>x.k),...P.slots.filter(Boolean).map(x=>x.k)];
+  v+=logosOf(c).filter(k=>targets.includes(k)).length*0.8;
+  return v;
+}
+function cpuTurn(){
+  const P=curP();
+  for(let h=0;h<2;h++){
+    if(canExpand(P) && P.cols.T.length<2){ const worst=[...P.hand].sort((a,b)=>cardValue(P,a)-cardValue(P,b))[0]; expand(P,worst); continue; }
+    let best=null,bv=0.2;
+    for(const c of P.hand){ const ci=costInfo(P,c); if(P.hand.length-1<ci.cost) continue; const v=cardValue(P,c); if(v>bv){bv=v;best=c;} }
+    if(!best) break;
+    const ci=costInfo(P,best);
+    const pay=P.hand.filter(c=>c!==best).sort((a,b)=>cardValue(P,a)-cardValue(P,b)).slice(0,ci.cost).map(c=>c.id);
+    hire(P,best,pay);
+  }
+  const opt=bestLaunch(P); if(opt) launch(P,opt.craft,opt.slot);
+  render(); setTimeout(endTurn, 900);
+}
+function bestLaunch(P){
+  let best=null,bv=-1; const hired=allHired(P);
+  for(let i=0;i<5;i++){ if(!slotOk(P,i)) continue;
+    for(const c of G.pool){ const v=SLOTS[i].p+hired.filter(h=>logosOf(h).includes(c.k)).length; if(v>bv){bv=v;best={slot:i,craft:c};} } }
+  return best;
+}
+
+/* ---------- rendering ---------- */
+function esc(s){return String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));}
+function bloodSvg(b,z){
+  const g=z>=0?ZOD[z]:"";
+  let shape;
+  if(b==="A") shape='<path d="M11 1.5 L20.5 20.5 H1.5 Z" fill="#f2c318" stroke="#b48a00" stroke-width="1"/>';
+  else if(b==="B") shape='<path d="M3 2 H15 Q20.5 2 20.5 7 Q20.5 10 18 11 Q20.5 12.5 20.5 15.5 Q20.5 20.5 15 20.5 H3 Z" fill="#f2c318" stroke="#b48a00" stroke-width="1"/>';
+  else if(b==="AB") shape='<path d="M8 1.5 L14.5 20.5 H1.5 Z" fill="#f2c318" stroke="#b48a00"/><path d="M11 3 H17 Q21 3 21 7 Q21 10 19 11 Q21 12.5 21 15.5 Q21 20 17 20 H11 Z" fill="#f2c318" stroke="#b48a00"/>';
+  else if(b==="C") shape='<circle cx="11" cy="11" r="9.5" fill="#f2c318" stroke="#b48a00"/><text x="11" y="15" text-anchor="middle" font-size="11" font-weight="700" fill="#5a4300">C</text>';
+  else shape='<circle cx="11" cy="11" r="9.5" fill="#f2c318" stroke="#b48a00"/>';
+  const glyph=b==="C"?"":`<text x="11" y="${b==="A"?17:15}" text-anchor="middle" font-size="${b==="A"?8:9}" fill="#4a3600" font-family="serif">${g}&#xFE0E;</text>`;
+  return `<svg class="bt" viewBox="0 0 22 22" aria-label="${b}型">${shape}${glyph}</svg>`;
+}
+const BACK='<span class="bk1">ISAS <i>JAXA</i></span><span class="bk2">EXPLORERS<br>CARD</span>';
+const HAS_IMG=true;
+const CRAFT_PAGE={DESTINY:91,ERG:92,HAYABUSA2:93,MMO:94,MMX:95,HINODE:96,SOLARC:97,XRISM:98};
+function imgPage(c){ if(c.fd||c.back) return 99; if(c.k) return CRAFT_PAGE[c.k]; return c.id; }
+function cardHTML(c,opts={}){
+  const tag=opts.button?"button":"div";
+  const attrs=opts.button?`data-act="${opts.act}" data-id="${opts.id??c.id}" type="button"`:"";
+  const cls=["card",opts.cls||""];
+  if(HAS_IMG){
+    const pg=imgPage(c), alt=c.fd?"伏せた一般職員":c.back?"カード裏面":c.n;
+    const hit=!c.k&&!c.fd&&!c.back&&opts.hit&&logosOf(c).some(k=>opts.hit.includes(k));
+    return `<${tag} class="${cls.join(" ")} photo ${hit?"hitc":""}" ${attrs} title="${esc(alt)}"><img src="cards/${pg}.jpg" alt="${esc(alt)}" loading="lazy" draggable="false"></${tag}>`;
+  }
+  if(c.fd||c.back) return `<${tag} class="card back ${opts.cls||""}" ${attrs} title="${c.fd?"伏せた一般職員":"カード裏面"}">${BACK}</${tag}>`;
+  if(c.k){ // craft
+    return `<${tag} class="${cls.join(" ")} craft" ${attrs} title="${esc(c.n)}">
+      <span class="topt">ISAS JAXA EXPLORERS CARD</span>
+      <span class="logos">${c.k==="HINODE"?"":`<span class="lg ${c.k}">${LOGO_LABEL[c.k]}</span>`}</span>
+      <span class="inner"><span class="dept">${esc(c.d)}</span><span class="nm">${esc(c.n)}</span><span class="no">FY2026 / No.${c.no}</span></span></${tag}>`;
+  }
+  cls.push(c.a);
+  const L=c.st?['<span class="lg STU">STUDENT</span>']:logosOf(c).map(k=>`<span class="lg ${k} ${opts.hit&&opts.hit.includes(k)?"hit":""}">${LOGO_LABEL[k]}</span>`);
+  const attrName={E:"ENGINEER",S:"SCIENTIST",T:"STAFF"}[c.a];
+  return `<${tag} class="${cls.join(" ")}" ${attrs} title="${esc(c.n)}（${c.b}型）">
+    <span class="topt">&nbsp;</span><span class="attr">${attrName}</span>
+    <span class="logos">${L.join("")}</span>${bloodSvg(c.b,c.z)}
+    <span class="inner"><span class="dept">${esc(c.d)}</span><span class="nm">${esc(c.n)}</span><span class="no">FY2026 / No.${c.no}</span></span>
+    <span class="ptv">${COLMAP[colOf(c)].pts}</span></${tag}>`;
+}
+function condHTML(s,P){
+  const pw=P?power(P):{E:99,S:99,T:99};
+  return `<div class="cond"><span class="i-e ${pw.E>=s.E?"met":"unmet"}" title="工学">⚒${s.E}</span><span class="i-s ${pw.S>=s.S?"met":"unmet"}" title="理学">🔭&#xFE0E;${s.S}</span><span class="i-t ${pw.T>=s.T?"met":"unmet"}" title="職員">◎${s.T}</span></div>`;
+}
+function sheetHTML(P,interactive,compact){
+  const launched=P.slots.filter(Boolean).map(x=>x.k);
+  const picking=interactive && G.phase==="launch" && UI.craft && !G.launched;
+  const slots=SLOTS.map((s,i)=>{
+    const x=P.slots[i], ok=!x&&slotOk(P,i);
+    const pick=picking&&ok;
+    return `<div class="slot ${ok&&interactive&&G.phase==="launch"?"ok":""} ${pick?"pick":""}" ${pick?`data-act="slot" data-id="${i}" role="button" tabindex="0"`:""}>
+      <span class="pts">${s.p}</span>${x?cardHTML(x):'<span></span>'}${condHTML(s,P)}</div>`;
+  }).join("");
+  const cols=COLS.map(c=>{
+    const st=P.cols[c.k];
+    return `<div class="col"><span class="pts">${c.pts}</span><div class="cost">${"<i></i>".repeat(c.cost)}</div>
+      <div class="head"><b>${c.k==="E"||c.k==="S"?"×2":""}</b>${c.label}</div>
+      <div class="stack">${st.map(x=>cardHTML(x,{button:true,act:"detail",hit:launched})).join("")}</div></div>`;
+  }).join("");
+  const comp=COLS.every(c=>P.cols[c.k].length>0);
+  return `<div class="sheet ${compact?"compact":""}"><span class="lbl">宇宙機カード</span><div class="slots">${slots}</div>
+    <span class="lbl">探究者カード</span><div class="cols">${cols}</div>
+    <div class="bonusline ${comp?"on":""}">コンプリートボーナス +3 ${comp?"達成":""}</div></div>`;
+}
+function oppHTML(){
+  return G.players.map((P,i)=>{const s=score(P),pw=power(P);
+    return `<div class="oppc ${i===G.cur?"cur":""}"><div class="nm">${esc(P.name)}${P.cpu?" (CPU)":""}<span>${s.total}点</span></div>
+    <div class="mini">${COLS.map(c=>`<div><small>${c.k}</small>${P.cols[c.k].length}</div>`).join("")}</div>
+    <div class="crafts">手札 ${P.hand.length}枚 ・ 工${pw.E}/理${pw.S}/職${pw.T}<br>打上げ: ${P.slots.filter(Boolean).map(x=>esc(x.n)).join("、")||"なし"}</div></div>`;}).join("");
+}
+function render(){
+  const app=document.getElementById("app");
+  if(!G){ app.innerHTML=setupHTML(); return; }
+  const P=curP(), human=!P.cpu;
+  const viewP = human ? P : (G.players.find(p=>!p.cpu)||P);
+  const steps=["ドロー","雇用","打ち上げ"].map((s,i)=>`<span class="${(i===1&&G.phase==="hire")||(i===2&&G.phase==="launch")?"on":""}">${s}</span>`).join("");
+  let hint="";
+  if(!human) hint="CPUが考えています…";
+  else if(G.phase==="hire") hint = UI.expand? "一般職員として伏せる手札を1枚選んでください" : UI.sel? `支払いに使う手札を ${costInfo(P,UI.sel).cost} 枚選んでください` : `手札から雇用する探究者を選択（あと${2-G.hires}人まで）`;
+  else hint = G.launched? "ターンを終了してください" : UI.craft? (SLOTS.filter((x,i)=>slotOk(P,i)).length>1? "条件を満たす枠が複数あります。置く枠を選んでください" : "光っている枠を選ぶと打ち上げます") : "打ち上げる宇宙機を場から選んでください";
+
+  let handHTML="";
+  if(human){
+    handHTML=P.hand.map(c=>{
+      const ci=costInfo(P,c);
+      let cls="";
+      if(UI.sel===c) cls="sel"; else if(UI.pay.includes(c.id)) cls="pay";
+      const act = G.phase!=="hire"?"detail": UI.expand?"expandpick": UI.sel?"pay":"pick";
+      const afford = P.hand.length-1>=ci.cost;
+      if(G.phase==="hire"&&!UI.sel&&!UI.expand&&(!afford||G.hires>=2)) cls="dim";
+      return `<div class="cw">${cardHTML(c,{button:true,act,cls})}<span class="costtag">${COLMAP[ci.col].jp.replace(/（.*）/,"")} コスト<b>${ci.cost}</b>${ci.blood||ci.basic?` <small>(-${ci.blood+ci.basic})</small>`:""}</span></div>`;
+    }).join("");
+  }
+  let actions="";
+  if(human && G.phase==="hire"){
+    if(UI.sel){ const ci=costInfo(P,UI.sel);
+      actions=`<button class="btn primary" data-act="confirm" ${UI.pay.length===ci.cost?"":"disabled"}>雇用する（${UI.pay.length}/${ci.cost}）</button><button class="btn ghost" data-act="cancel">やめる</button>
+      <span class="note">基本${ci.base} − 血液型${ci.blood} − 基礎研究${ci.basic} = <b>${ci.cost}</b></span>`;
+    } else if(UI.expand){ actions=`<button class="btn ghost" data-act="cancel">やめる</button>`; }
+    else {
+      actions=`<button class="btn primary" data-act="tolaunch">雇用を終えて打ち上げへ</button>`+
+      (canExpand(P)&&G.hires<2?`<button class="btn" data-act="expand">研究室の拡大（1回限り）</button>`:"");
+    }
+  } else if(human && G.phase==="launch"){
+    actions=`<button class="btn primary" data-act="end">ターン終了</button>`+(UI.craft?`<button class="btn ghost" data-act="cancel">選び直す</button>`:"");
+  }
+  const poolPick = human && G.phase==="launch" && !G.launched;
+  const pool=G.pool.map((c,i)=>`<div style="width:110px;flex:none">${cardHTML(c,{button:true,act:poolPick?"craft":"detail",id:i,cls:UI.craft===c?"sel":""})}</div>`).join("")||'<span class="note">すべて打ち上げ済み — このラウンドで終了</span>';
+
+  app.innerHTML=`
+  <header class="top"><div class="brand"><small>ISAS / JAXA EXPLORERS CARD</small><h1>サスプロゲーム</h1></div>
+    <div class="stats"><span>ラウンド <b>${G.round}</b></span><span>山札 <b>${G.deck.length}</b></span><span>捨て札 <b>${G.discard.length}</b></span></div>
+    <div class="row" style="display:flex;gap:8px"><button class="btn ghost" data-act="rules">ルール</button><button class="btn ghost" data-act="quit">やめる</button></div></header>
+  <div class="phasebar"><div><div class="who">${esc(P.name)} のターン${P.cpu?"（CPU）":""}</div><div class="hint">${hint}</div></div><div class="steps">${steps}</div></div>
+  <div class="game"><div style="display:grid;gap:14px;min-width:0">
+    <section class="panel"><h3>場の宇宙機カード（残り${G.pool.length}）</h3><div class="poolrow"><div class="pool">${pool}</div><div class="piles"><div class="pile">${cardHTML({back:1})}<span>山札 ${G.deck.length}</span></div><div class="pile">${G.discard.length?cardHTML({back:1}):'<div class="card" style="background:#111;border:1px dashed #444"></div>'}<span>捨て札 ${G.discard.length}</span></div></div></div></section>
+    <section class="panel"><h3>${esc(P.name)} のプレイシート　<span style="color:var(--gold)">${score(P).total}点</span></h3>${sheetHTML(P,human)}</section>
+    ${human?`<section class="panel"><h3>手札（${P.hand.length}枚）</h3><div class="hand">${handHTML}</div><div class="actions">${actions}</div></section>`:""}
+    <section class="panel"><h3>ほかのプレイヤーのプレイシート</h3><div class="sheets">${G.players.map((Q,i)=>({Q,i})).filter(x=>x.i!==G.cur).map(({Q})=>`<div class="sheetwrap"><div class="sh">${esc(Q.name)}${Q.cpu?"（CPU）":""}<span>${score(Q).total}点</span></div>${sheetHTML(Q,false,true)}</div>`).join("")}</div></section>
+  </div>
+  <aside style="display:grid;gap:14px;align-content:start"><section class="panel"><h3>プレイヤー</h3><div class="opp">${oppHTML()}</div></section>
+  <section class="panel"><h3>ログ</h3><div class="log">${G.log.map(l=>`<div>${l}</div>`).join("")}</div></section></aside></div>
+  ${UI.pass?`<div class="modal"><div class="box" style="text-align:center"><h2>${esc(P.name)} の番です</h2><p class="lede" style="margin:auto">ほかの人に手札が見えないように端末を渡してください。</p><button class="btn primary" data-act="unpass">手札を見る</button></div></div>`:""}
+  ${UI.detail?detailHTML(UI.detail):""}
+  ${UI.showRules?rulesHTML():""}
+  ${G.over?overHTML():""}`;
+}
+function detailHTML(c){
+  if(c.fd) return `<div class="modal" data-act="close"><div class="box"><h2>伏せた一般職員</h2><p class="lede">研究室の拡大で雇用したカード。一般職員として2点、ロゴは参照できません。</p><button class="btn" data-act="close">閉じる</button></div></div>`;
+  const isCraft=!!c.k;
+  const extra=isCraft?`<div class="rules"><div>ロゴ: <b>${LOGO_LABEL[c.k]}</b>${c.k==="HINODE"?"（ロゴを持つ探究者は藤本所長のみ）":""}</div><div>打ち上げると、同じロゴを持つ自分の探究者1枚につき+1点。</div></div>`:
+   `<div class="rules"><div>属性: <b>${COLMAP[colOf(c)].jp}</b>（${COLMAP[colOf(c)].pts}点）</div><div>血液型: <b>${c.b}型</b>　星座: <b>${c.z>=0?ZODN[c.z]+"座":"—"}</b></div>
+   <div>ロゴ: <b>${c.st?"学生":(logosOf(c).map(k=>LOGO_LABEL[k]).join("・")||"なし（基礎研究）")}</b></div>
+   ${c.no===NO_DIRECTOR?"<div><b>統括</b>：すべての宇宙機のロゴを持つ</div>":""}${c.no===NO_SAWAI?"<div><b>プロフェッショナル</b>：打ち上げ条件で3枚分</div>":""}${c.no==="0070"?"<div><b>C型小惑星リュウグウ</b>：すべての血液型と一致</div>":""}</div>`;
+  return `<div class="modal" data-act="close"><div class="box"><div class="big">${cardHTML(c)}<div style="display:grid;gap:10px"><h2>${esc(c.n)}</h2>${extra}<div class="tags">${c.t.map(t=>`<span>${esc(t)}</span>`).join("")}</div></div></div><button class="btn" data-act="close">閉じる</button></div></div>`;
+}
+function overHTML(){
+  const rows=G.players.map(P=>({P,s:score(P)})).sort((a,b)=>b.s.total-a.s.total);
+  const top=rows[0].s.total;
+  return `<div class="modal"><div class="box"><h2>ゲーム終了</h2><p class="lede">${rows.filter(r=>r.s.total===top).map(r=>esc(r.P.name)).join("・")} の勝利！</p>
+  <div style="overflow-x:auto"><table class="score"><tr><th>センター長</th><th>探究者</th><th>宇宙機</th><th>PJ</th><th>コンプ</th><th>合計</th></tr>
+  ${rows.map(r=>`<tr class="${r.s.total===top?"win":""}"><td>${esc(r.P.name)}</td><td>${r.s.exp}</td><td>${r.s.crafts}</td><td>${r.s.proj}</td><td>${r.s.comp}</td><td>${r.s.total}</td></tr>`).join("")}</table></div>
+  <div class="actions"><button class="btn primary" data-act="again">もう一度</button><button class="btn" data-act="quit">設定に戻る</button><button class="btn ghost" data-act="closeover">盤面を見る</button></div></div></div>`;
+}
+function rulesHTML(){
+  return `<div class="modal" data-act="closerules"><div class="box"><h2>ルールのまとめ</h2><div class="rules">
+  <div><b>1ターン</b>：2枚引く → 探究者を2人まで雇用 → 条件を満たす宇宙機を1機まで打ち上げ → 終了。</div>
+  <div><b>雇用コスト</b>：工学・理学の研究者3、一般職員2、学生1。手札を捨て札にして支払う。</div>
+  <div><b>血液型軽減</b>：同じ列にいる同じ血液型1枚につき−1。AB型はA型・B型として扱い、C型（津田副所長）はすべてと一致。</div>
+  <div><b>基礎研究</b>：列の一番上がロゴなしの研究者・一般職員なら、次に重ねる時−1（学生ロゴはロゴ扱い）。</div>
+  <div><b>研究室の拡大</b>：学生が合計3枚以上なら1回だけ、手札1枚を伏せて一般職員として無料で雇用（2人の雇用枠を1つ使う）。</div>
+  <div><b>打ち上げ</b>：プレイシートの空き枠の条件（⚒工学・🔭&#xFE0E;理学・◎職員）を満たすと、場の宇宙機を置ける。研究者は2枚分、澤井副所長は3枚分。</div>
+  <div><b>得点</b>：探究者の点＋宇宙機枠の点＋プロジェクトボーナス（打ち上げた宇宙機と同じロゴの探究者1枚につき+1、藤本所長は全ロゴ）＋全5種そろえると+3。</div>
+  <div><b>終了</b>：場の宇宙機がすべて打ち上がったら、そのラウンドの最後のプレイヤーまで遊んで終了。</div>
+  </div><button class="btn" data-act="closerules">閉じる</button></div></div>`;
+}
+function setupHTML(){
+  const pls=SETUP.players.slice(0,SETUP.n).map((p,i)=>`<div class="pl-row"><label for="pn${i}">P${i+1}</label><input id="pn${i}" data-pn="${i}" value="${esc(p.name)}" maxlength="12"><select id="pc${i}" data-pc="${i}"><option value="h" ${!p.cpu?"selected":""}>人間</option><option value="c" ${p.cpu?"selected":""}>CPU</option></select></div>`).join("");
+  return `<header class="top"><div class="brand"><small>ISAS / JAXA EXPLORERS CARD</small><h1>サスプロゲーム</h1></div></header>
+  <section class="setup"><div><h2>宇宙センター長として、探究者を雇い宇宙機を打ち上げよう</h2>
+  <p class="lede">FY2026 探究者カード${CARDS.length}枚・宇宙機カード${CRAFTS.length}枚を収録。1台の画面で交代しながら、またはCPUと対戦できます（2人〜4人・約20分）。</p></div>
+  <div class="row"><label for="np">人数</label><select id="np">${[2,3,4].map(n=>`<option ${SETUP.n===n?"selected":""}>${n}</option>`).join("")}</select>
+  <label for="nc">使う宇宙機</label><select id="nc">${[3,4,5,6,7,8].map(n=>`<option ${SETUP.crafts===n?"selected":""}>${n}</option>`).join("")}</select></div>
+  <div style="display:grid;gap:8px">${pls}</div>
+  <div class="row"><button class="btn primary" data-act="start">ゲーム開始</button><button class="btn ghost" data-act="rules0">ルールを見る</button></div>
+  <div><h3 style="font-size:12px;color:var(--mute);letter-spacing:.14em;margin:0 0 8px">収録カードの一部</h3><div class="hand">${[6,52,71,0,12,92].map(i=>i<CARDS.length?cardHTML(CARDS[i]):"").join("")}${cardHTML(CRAFTS[2])}${cardHTML({back:1})}</div></div>
+  </section>${UI.showRules?rulesHTML():""}`;
+}
+
+/* ---------- events ---------- */
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.id==="np"){SETUP.n=+t.value;render();}
+  else if(t.id==="nc"){SETUP.crafts=+t.value;}
+  else if(t.dataset.pc){SETUP.players[+t.dataset.pc].cpu=t.value==="c";}
+});
+document.addEventListener("input",e=>{const t=e.target; if(t.dataset.pn){SETUP.players[+t.dataset.pn].name=t.value;}});
+document.addEventListener("keydown",e=>{ if((e.key==="Enter"||e.key===" ")&&e.target.dataset&&e.target.dataset.act==="slot"){e.preventDefault();e.target.click();} if(e.key==="Escape"&&(UI.detail||UI.showRules)){UI.detail=null;UI.showRules=false;render();}});
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-act]"); if(!el) return;
+  const act=el.dataset.act, id=el.dataset.id;
+  if(el.classList.contains("modal") && e.target!==el) return;
+  const P=G&&curP();
+  const findHand=()=>P.hand.find(c=>String(c.id)===id);
+  switch(act){
+    case "start": newGame(); break;
+    case "again": newGame(); break;
+    case "quit": if(!G||G.over||confirm("ゲームをやめて設定に戻りますか？")){G=null;render();} break;
+    case "rules": case "rules0": UI.showRules=true; render(); break;
+    case "closerules": UI.showRules=false; render(); break;
+    case "closeover": G.over=false; G.phase="done"; render(); break;
+    case "unpass": UI.pass=false; render(); break;
+    case "detail": {
+      let c=null;
+      if(el.closest(".pool")) c=G.pool[+id];
+      else { for(const p of G.players){ c=p.hand.find(x=>String(x.id)===id)||allHired(p).find(x=>String(x.id)===id)||p.slots.find(x=>x&&x.no===id); if(c) break; } }
+      if(c){UI.detail=c;render();} break; }
+    case "close": UI.detail=null; render(); break;
+    case "pick": { if(G.hires>=2) return; const c=findHand(); if(!c) return; const ci=costInfo(P,c);
+      if(P.hand.length-1<ci.cost){UI.detail=c;render();return;}
+      UI.sel=c; UI.pay=[];
+      if(ci.cost===0){ hire(P,c,[]); UI.sel=null; }
+      render(); break; }
+    case "pay": { const c=findHand(); if(!c) return; if(c===UI.sel){UI.sel=null;UI.pay=[];render();return;}
+      const need=costInfo(P,UI.sel).cost;
+      if(UI.pay.includes(c.id)) UI.pay=UI.pay.filter(x=>x!==c.id); else if(UI.pay.length<need) UI.pay.push(c.id);
+      render(); break; }
+    case "confirm": hire(P,UI.sel,UI.pay); UI.sel=null; UI.pay=[]; render(); break;
+    case "cancel": UI.sel=null; UI.pay=[]; UI.expand=false; UI.craft=null; render(); break;
+    case "expand": UI.expand=true; render(); break;
+    case "expandpick": { const c=findHand(); if(c){expand(P,c);UI.expand=false;render();} break; }
+    case "tolaunch": G.phase="launch"; UI.sel=null; UI.pay=[]; render(); break;
+    case "craft": UI.craft=G.pool[+id]; render(); break;
+    case "slot": if(UI.craft && slotOk(P,+id)){ launch(P,UI.craft,+id); UI.craft=null; render(); } break;
+    case "end": endTurn(); break;
+  }
+});
+render();
+</script>
+</body></html>
